@@ -131,7 +131,7 @@ class _HomeState extends State<Home> {
                             QuickActionIcon(
                               icon: Icon(Icons.account_balance),
                               text: 'Send',
-                              onTap: () => print('Send2 tapped'),
+                              onTap: () => null,
                             ),
                           ],
                         ),
@@ -167,12 +167,14 @@ class _HomeState extends State<Home> {
     String day = now.add(Duration(days: _testDay)).day <= 9
         ? '0${now.add(Duration(days: _testDay)).day}'
         : '${now.add(Duration(days: _testDay)).day}';
-    String month = now.month <= 9 ? '0${now.month}' : '${now.month}';
+    String month = now.add(Duration(days: 20)).month <= 9
+        ? '0${now.add(Duration(days: 20)).month}'
+        : '${now.add(Duration(days: 20)).month}';
     int date = int.parse('${now.year}$month$day');
     Random random = Random();
     Transfer transfer = Transfer(
         amount: random.nextInt(500).toDouble(),
-        isExpense: true,
+        isExpense: false,
         name: 'testtransfer1',
         isRecurring: false,
         category: 'Food',
@@ -186,6 +188,6 @@ class _HomeState extends State<Home> {
         date: date);
     await DatabaseService(uid: userID).createTransfer(transfer);
     await DatabaseService(uid: userID).createTransfer(transfer2);
-    _testDay += 1;
+    _testDay += 3;
   }
 }
