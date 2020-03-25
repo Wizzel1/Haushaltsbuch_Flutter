@@ -180,10 +180,9 @@ class DatabaseService {
     }
   }
 
-  // brew list from snapshot
+  // transfer list from snapshot
   List<Transfer> _transferListFromSnapshot(QuerySnapshot snapshot) {
     return snapshot.documents.map((doc) {
-      //print(doc.data);
       return Transfer(
           date: doc.data['date'],
           name: doc.data['name'],
@@ -194,7 +193,7 @@ class DatabaseService {
     }).toList();
   }
 
-  // get brews stream
+  // get tranfer stream
   Stream<List<Transfer>> get transfers {
     return _transferCollection
         .document(uid)
