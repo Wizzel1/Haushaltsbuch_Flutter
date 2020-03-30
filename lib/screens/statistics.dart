@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_haushaltsbuch/components/customFilterChip.dart';
 import 'package:flutter_haushaltsbuch/components/flchart.dart';
+import 'package:flutter_haushaltsbuch/components/monthPicker.dart';
 import 'package:flutter_haushaltsbuch/models/transfer.dart';
 import 'package:flutter_haushaltsbuch/services/database.dart';
 import 'package:flutter_haushaltsbuch/utility/constants.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_haushaltsbuch/models/user.dart';
 import 'package:flutter_haushaltsbuch/utility/dateFormatter.dart';
 import 'package:flutter_haushaltsbuch/components/pieceBarChart.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_haushaltsbuch/components/pieChart.dart';
 
 class Statistics extends StatefulWidget {
   @override
@@ -19,14 +21,16 @@ class Statistics extends StatefulWidget {
 
 class _StatisticsState extends State<Statistics> {
   List<String> _selectedCategories = [];
-  List<String> _selectedDateRange = [];
+  List<DateTime> _selectedDates = [];
+  DateTime _selectedDate;
 
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<User>(context);
-    return FutureProvider<List<Transfer>>.value(
+    _selectedDate == null ? _selectedDate = DateTime.now() : null;
+    return FutureProvider<Map>.value(
       value: DatabaseService(uid: user.uid)
-          .getSelectedTransfersBy(categories: _selectedCategories, dateRange: _selectedDateRange),
+          .getSelectedTransfersBy(categories: _selectedCategories, singleDate: _selectedDate),
       child: Scaffold(
         backgroundColor: kTextColorHeading,
         body: Padding(
@@ -75,31 +79,52 @@ class _StatisticsState extends State<Statistics> {
                         ),
                       ),
                     ),
-                    RaisedButton(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(19)),
-                        color: Colors.red,
-                        onPressed: () async {
-                          final List<DateTime> picked = await DateRangePicker.showDatePicker(
-                              context: context,
-                              initialFirstDate: _selectedDateRange.isEmpty
-                                  ? DateTime.now()
-                                  : DateTime.parse(_selectedDateRange[0]),
-                              initialLastDate: _selectedDateRange.isEmpty
-                                  ? (DateTime.now()).add(Duration(days: 7))
-                                  : DateTime.parse(_selectedDateRange[1]),
-                              firstDate: DateTime(2015),
-                              lastDate: DateTime(2050));
-                          if (picked != null && picked.length == 2) {
-                            _handlePicked(picked);
-                          }
-                        },
-                        child: Text(
-                          _selectedDateRange.isEmpty
-                              ? 'Select a period'
-                              : DateFormatter().formatDateRange(_selectedDateRange),
-                          style: kTabbarTextStyle.copyWith(color: kBackgroundColor),
-                        )),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        FlatButton(
+                          child: Text('clear'),
+                          onPressed: () {
+                            setState(() {
+                              _selectedDates.clear();
+                            });
+                          },
+                        ),
+                        RaisedButton(
+                            elevation: 5,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(19)),
+                            color: Colors.red,
+                            onPressed: () async {
+                              final DateTime picked = await showMonthPicker(
+                                  context: context,
+                                  initialDate: DateTime.now(),
+                                  firstDate: DateTime(2015),
+                                  lastDate: DateTime(2050));
+                              //TODO: Refactor this code for a detailed Range picker
+//                          final List<DateTime> picked = await DateRangePicker.showDatePicker(
+//                              context: context,
+//                              initialFirstDate: _selectedDateRange.isEmpty
+//                                  ? DateTime.now()
+//                                  : _selectedDateRange[0],
+//                              initialLastDate: _selectedDateRange.isEmpty
+//                                  ? (DateTime.now()).add(Duration(days: 7))
+//                                  : _selectedDateRange[1],
+//                              firstDate: DateTime(2015),
+//                              lastDate: DateTime(2050));
+                              if (picked != null) {
+                                setState(() {
+                                  _selectedDate = picked;
+                                });
+                              }
+                            },
+                            child: Text(
+                              _selectedDate == null
+                                  ? 'Select a Month'
+                                  : DateFormat('LLLL yyyy').format(_selectedDate),
+                              style: kTabbarTextStyle.copyWith(color: kBackgroundColor),
+                            )),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -115,13 +140,16 @@ class _StatisticsState extends State<Statistics> {
                       topRight: Radius.circular(19),
                     ),
                   ),
-                  child: Consumer<List<Transfer>>(
-                    builder: (context, providerTransferData, child) {
-                      return BarChartSample5();
-                      StatisticBarChart(
-                        providerData: providerTransferData,
-                        dateRange: _selectedDateRange,
+                  child: Consumer<Map>(
+                    builder: (context, providerData, child) {
+                      return StatisticsPieChart(
+                        data: providerData,
                       );
+
+//                      StatisticBarChart(
+//                        providerData: providerTransferData,
+//                        dateRange: _selectedDateRange,
+//                      );
                     },
                   ),
                 ),
@@ -150,14 +178,5 @@ class _StatisticsState extends State<Statistics> {
               },
             ))
         .toList();
-  }
-
-  void _handlePicked(List<DateTime> pickedDates) {
-    String date1 = DateFormat('yyyyMMdd').format(pickedDates[0]);
-    String date2 = DateFormat('yyyyMMdd').format(pickedDates[1]);
-    List<String> dateRange = [date1, date2];
-    setState(() {
-      _selectedDateRange = dateRange;
-    });
   }
 }

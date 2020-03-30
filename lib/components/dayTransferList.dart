@@ -20,7 +20,6 @@ class _TransferListState extends State<TransferList> {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<User>(context);
-//    final transfers = Provider.of<List<Transfer>>(context);
     return StreamBuilder(
       stream: DatabaseService(uid: user.uid).transfers,
       builder: (BuildContext context, AsyncSnapshot builderSnapshot) {

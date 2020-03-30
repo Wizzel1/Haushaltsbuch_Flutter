@@ -1,13 +1,19 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_haushaltsbuch/utility/constants.dart';
+import 'package:flutter_haushaltsbuch/models/transfer.dart';
 
-class BarChartSample5 extends StatefulWidget {
+class PieceBarChart extends StatefulWidget {
+//  PieceBarChart({this.dateRange, this.providerData});
+//
+//  final List<Transfer> providerData;
+//  final List<String> dateRange;
+
   @override
-  State<StatefulWidget> createState() => BarChartSample5State();
+  State<StatefulWidget> createState() => PieceBarChartState();
 }
 
-class BarChartSample5State extends State<BarChartSample5> {
+class PieceBarChartState extends State<PieceBarChart> {
   final Color dark = const Color(0xff3b8c75);
   final Color normal = const Color(0xff64caad);
   final Color light = const Color(0xff73e8c9);
@@ -52,6 +58,14 @@ class BarChartSample5State extends State<BarChartSample5> {
                   return 'Sat';
                 case 6:
                   return 'Sun';
+                case 7:
+                  return 'Test';
+                case 8:
+                  return 'Test';
+                case 9:
+                  return 'Test';
+                case 10:
+                  return 'Test';
                 default:
                   return '';
               }

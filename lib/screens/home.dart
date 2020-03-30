@@ -187,7 +187,7 @@ class _HomeState extends State<Home> {
         category: 'Payment',
         date: date);
     await DatabaseService(uid: userID).createTransfer(transfer);
-    await DatabaseService(uid: userID).createTransfer(transfer2);
-    _testDay += 3;
+//    await DatabaseService(uid: userID).createTransfer(transfer2);
+    _testDay += 0;
   }
 }

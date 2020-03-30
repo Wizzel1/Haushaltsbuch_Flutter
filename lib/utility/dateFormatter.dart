@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class DateFormatter {
   ///Formats a single [transferDate] (yearmonthday) to readable Format (day.month.year)
   String formatDate(int transferDate) {
@@ -8,33 +10,15 @@ class DateFormatter {
     return '$day.$month.$year';
   }
 
-  ///Takes in the [transferDate] and returns the week (1-5) for this date.
-  String calculateWeek(int transferDate) {
-    var dateString = '$transferDate';
-    var day = int.parse(dateString.substring(6, dateString.length));
-    if (day >= 1 && day <= 7) {
-      return '1';
-    } else if (day >= 8 && day <= 14) {
-      return '2';
-    } else if (day >= 15 && day <= 21) {
-      return '3';
-    } else if (day >= 22 && day <= 28) {
-      return '4';
-    } else {
-      return '5';
-    }
-  }
-
   ///Formats a [selectedDateRange] from the datepicker to a readable Range Format
-  String formatDateRange(List<String> selectedDateRange) {
+  String formatDateRange(List<DateTime> selectedDateRange) {
     List<String> dateStrings = [];
     selectedDateRange.forEach((date) {
-      var year = date.substring(0, 4);
-      var month = date.substring(4, 6);
-      var day = date.substring(6, date.length);
-      dateStrings.add('$day.$month.$year');
+      var year = DateFormat('yyyy').format(date);
+      var month = DateFormat('LLLL').format(date);
+      dateStrings.add('$month $year');
     });
-    return '${dateStrings[0]} - ${dateStrings[1]}';
+    return '$dateStrings';
   }
 
   ///Checks if today or yesterday is equal to [date]. Returns string if true.
