@@ -55,7 +55,7 @@ class DatabaseService {
       Map snapshotData = snapshot.data;
       if (snapshotData.containsKey(transfer.category)) {
         //if this week already contains an entry for the transfer.category
-        double oldAmount = snapshotData[transfer.category];
+        double oldAmount = double.parse(snapshotData[transfer.category].toString());
         double newAmount = oldAmount + transfer.amount;
         snapshotData[transfer.category] = newAmount;
         await totalsYearMonthRef.setData(snapshotData);
@@ -95,59 +95,67 @@ class DatabaseService {
   //user created new category
   Future<void> updateUserCategories() async {}
 
-  ///Runs a query for the selected time or periods of time.
+  ///Runs a query for the selected time or period of time.
   ///
   ///[dateRange] is a connected period of time (01.01.2020 - 01.03.2020)
   ///
-  ///[individualDates] is a list of non connected months (January 2020, May 2020, December 2020)
-  ///
-  ///[singleDate] is a single DateTime.
-  Future<Map> getSelectedTransfersBy(
-      {List<String> categories,
-      List<DateTime> dateRange,
-      List<DateTime> individualDates,
-      DateTime singleDate}) async {
-//    if (individualDates.isEmpty) {
-//      print('returning []');
-//      return null;
-//    }
-
-    print('${singleDate.year} ${singleDate.month}');
-    var snapshot = await _totalsCollection
-        .document(uid)
-        .collection('${singleDate.year}')
-        .document('0${singleDate.month}')
-        .get();
-    Map snapShotmap = snapshot.data;
-    print(snapShotmap.length);
-    return snapShotmap;
-
-    //TODO: Refactor this code to load individual transfers
-//    try {
-//      QuerySnapshot snapshot = await _transferCollection
-//          .where('userID', isEqualTo: uid)
-//          .where('date', isGreaterThanOrEqualTo: dateRange[0])
-//          .where('date', isLessThanOrEqualTo: dateRange[1])
-//          .where('category', whereIn: categories)
-//          .orderBy('date')
-//          .getDocuments();
-//      List<Transfer> transferList = [];
-//      snapshot.documents.forEach((transferData) {
-//        transferList.add(Transfer(
-//            isExpense: transferData.data['isExpense'],
-//            name: transferData.data['name'],
-//            amount: transferData.data['amount'],
-//            isRecurring: transferData.data['isRecurring'],
-//            category: transferData.data['category'],
-//            date: transferData.data['date']));
-//      });
-//      print('first transfer : ${transferList[0].date}');
-//      print('last transfer : ${transferList.last.date}');
-//      print(transferList.length);
-//      return transferList;
-//    } catch (e) {
-//      print(e);
-//    }
+  ///[dateList] is a list of non connected months (January 2020, May 2020, December 2020)
+  Future<Object> getDataBySelectedTime(
+      {List<String> categories, List<DateTime> dateRange, List<DateTime> dateList}) async {
+    print(dateList.length);
+    if (dateRange.isEmpty && dateList.length > 1) {
+      //Used to return a list of the data for all "individualDates"
+      print('returning list of maps');
+      List<Map> dataList = [];
+      for (DateTime date in dateList) {
+        var snapshot = await _totalsCollection
+            .document(uid)
+            .collection('${date.year}')
+            .document(date.month <= 9 ? '0${date.month}' : '${date.month}')
+            .get();
+        Map snapShotmap = snapshot.data;
+        dataList.add(snapShotmap);
+      }
+      return dataList;
+    } else if (dateRange.isEmpty && dateList.length == 1) {
+      print('returning single date data');
+      //used to return a map for a "singleDate"
+      DateTime singleDate = dateList[0];
+      var snapshot = await _totalsCollection
+          .document(uid)
+          .collection('${singleDate.year}')
+          .document(singleDate.month <= 9 ? '0${singleDate.month}' : '${singleDate.month}')
+          .get();
+      Map snapShotmap = snapshot.data;
+      return snapShotmap;
+    } else if (dateRange.isNotEmpty && dateList.isEmpty) {
+      //TODO: Refactor this code to load individual transfers (subscribers only)
+      try {
+        QuerySnapshot snapshot = await _transferCollection
+            .where('userID', isEqualTo: uid)
+            .where('date', isGreaterThanOrEqualTo: dateRange[0])
+            .where('date', isLessThanOrEqualTo: dateRange[1])
+            .where('category', whereIn: categories)
+            .orderBy('date')
+            .getDocuments();
+        List<Transfer> transferList = [];
+        snapshot.documents.forEach((transferData) {
+          transferList.add(Transfer(
+              isExpense: transferData.data['isExpense'],
+              name: transferData.data['name'],
+              amount: transferData.data['amount'],
+              isRecurring: transferData.data['isRecurring'],
+              category: transferData.data['category'],
+              date: transferData.data['date']));
+        });
+        print('first transfer : ${transferList[0].date}');
+        print('last transfer : ${transferList.last.date}');
+        print(transferList.length);
+        return transferList;
+      } catch (e) {
+        print(e);
+      }
+    }
   }
 
   // transfer list from snapshot

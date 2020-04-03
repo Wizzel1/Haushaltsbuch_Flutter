@@ -16,9 +16,9 @@ class DateFormatter {
     selectedDateRange.forEach((date) {
       var year = DateFormat('yyyy').format(date);
       var month = DateFormat('LLLL').format(date);
-      dateStrings.add('$month $year');
+      dateStrings.add('$month $year ');
     });
-    return '$dateStrings';
+    return dateStrings.join(', ');
   }
 
   ///Checks if today or yesterday is equal to [date]. Returns string if true.

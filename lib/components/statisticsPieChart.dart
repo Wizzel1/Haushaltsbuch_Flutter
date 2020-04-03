@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_haushaltsbuch/components/pieChartIndicator.dart';
 
 class StatisticsPieChart extends StatefulWidget {
-  StatisticsPieChart({this.data});
+  StatisticsPieChart({this.data, this.touchedIndex});
 
   final Map data;
+  final int touchedIndex;
   List<Color> colorList = [Color(0xff0293ee), Color(0xfff8b250), Color(0xff845bef)];
 
   @override
@@ -13,8 +14,8 @@ class StatisticsPieChart extends StatefulWidget {
 }
 
 class StatisticsPieChartState extends State<StatisticsPieChart> {
-  int touchedIndex;
-  int totalAmount;
+  int _touchedIndex;
+  double totalAmount;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,7 @@ class StatisticsPieChartState extends State<StatisticsPieChart> {
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: _buildIndicators(widget.data),
+          children: _buildIndicators(),
         ),
         SizedBox(
           height: 18,
@@ -41,9 +42,9 @@ class StatisticsPieChartState extends State<StatisticsPieChart> {
                         setState(() {
                           if (pieTouchResponse.touchInput is FlLongPressEnd ||
                               pieTouchResponse.touchInput is FlPanEnd) {
-                            touchedIndex = -1;
+                            _touchedIndex = -1;
                           } else {
-                            touchedIndex = pieTouchResponse.touchedSectionIndex;
+                            _touchedIndex = pieTouchResponse.touchedSectionIndex;
                           }
                         });
                       }),
@@ -56,6 +57,7 @@ class StatisticsPieChartState extends State<StatisticsPieChart> {
                 ),
               ),
               Positioned.fill(
+                //Text in the middle of the piechart
                 child: Align(
                   alignment: Alignment.center,
                   child: Text(_getDisplayText(),
@@ -76,13 +78,16 @@ class StatisticsPieChartState extends State<StatisticsPieChart> {
   List<PieChartSectionData> showingSections() {
     var mapList = widget.data.entries.toList();
     return List.generate(mapList.length, (i) {
-      final isTouched = i == touchedIndex;
+      final isTouched = i == _touchedIndex;
       final double fontSize = isTouched ? 25 : 16;
       final double radius = isTouched ? 60 : 50;
+      double valueAtIndex = mapList[i].value.runtimeType == int
+          ? double.parse(mapList[i].value.toString())
+          : mapList[i].value;
       return PieChartSectionData(
         color: widget.colorList[i],
-        value: double.parse(mapList[i].value.toString()),
-        title: _getPercentage(double.parse(mapList[i].value.toString())),
+        value: valueAtIndex,
+        title: _getPercentage(valueAtIndex),
         radius: radius,
         titleStyle: TextStyle(
             fontSize: fontSize, fontWeight: FontWeight.bold, color: const Color(0xffffffff)),
@@ -90,22 +95,28 @@ class StatisticsPieChartState extends State<StatisticsPieChart> {
     });
   }
 
-  List<Widget> _buildIndicators(Map data) {
-    var mapList = data.entries.toList();
+  List<Widget> _buildIndicators() {
+    var mapList = widget.data.entries.toList();
     return mapList.map((e) {
       int index = mapList.indexOf(e);
       return Indicator(
         color: widget.colorList[index],
         text: e.key,
+        onTap: () {
+          setState(() {
+            _touchedIndex == index ? _touchedIndex = -1 : _touchedIndex = index;
+          });
+        },
         isSquare: false,
-        size: touchedIndex == index ? 18 : 16,
-        textColor: touchedIndex == index ? Colors.black : Colors.grey,
+        isSelectable: false,
+        size: _touchedIndex == index ? 18 : 16,
+        textColor: _touchedIndex == index ? Colors.black : Colors.grey,
       );
     }).toList();
   }
 
   _getTotalAmount() {
-    totalAmount = 0;
+    totalAmount = 0.0;
     var mapList = widget.data.entries.toList();
     for (var entry in mapList) {
       setState(() {
@@ -116,14 +127,14 @@ class StatisticsPieChartState extends State<StatisticsPieChart> {
 
   String _getAmountAt(int index) {
     var mapList = widget.data.entries.toList();
-    return '${mapList[index].value}€';
+    return '${mapList[index].value.toStringAsFixed(2)}€';
   }
 
   String _getDisplayText() {
-    if (touchedIndex != null && touchedIndex >= 0) {
-      return _getAmountAt(touchedIndex);
+    if (_touchedIndex != null && _touchedIndex >= 0) {
+      return _getAmountAt(_touchedIndex);
     } else {
-      return '$totalAmount€';
+      return '${totalAmount.toStringAsFixed(2)}€';
     }
   }
 

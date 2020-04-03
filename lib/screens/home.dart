@@ -164,16 +164,12 @@ class _HomeState extends State<Home> {
 
   Future _createTestData(String userID) async {
     DateTime now = DateTime.now();
-    String day = now.add(Duration(days: _testDay)).day <= 9
-        ? '0${now.add(Duration(days: _testDay)).day}'
-        : '${now.add(Duration(days: _testDay)).day}';
-    String month = now.add(Duration(days: 20)).month <= 9
-        ? '0${now.add(Duration(days: 20)).month}'
-        : '${now.add(Duration(days: 20)).month}';
+    String day = now.day <= 9 ? '0${now.day}' : '${now.day}';
+    String month = now.month <= 9 ? '0${now.month}' : '${now.month}';
     int date = int.parse('${now.year}$month$day');
     Random random = Random();
     Transfer transfer = Transfer(
-        amount: random.nextInt(500).toDouble(),
+        amount: 195.50,
         isExpense: false,
         name: 'testtransfer1',
         isRecurring: false,
