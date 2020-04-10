@@ -16,6 +16,7 @@ class TransferList extends StatefulWidget {
 
 class _TransferListState extends State<TransferList> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  final GlobalKey<AnimatedListState> _animatedListKey = GlobalKey<AnimatedListState>();
 
   @override
   Widget build(BuildContext context) {

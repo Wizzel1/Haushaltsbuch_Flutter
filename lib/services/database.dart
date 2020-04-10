@@ -100,13 +100,21 @@ class DatabaseService {
   ///[dateRange] is a connected period of time (01.01.2020 - 01.03.2020)
   ///
   ///[dateList] is a list of non connected months (January 2020, May 2020, December 2020)
+  ///which defaults to current month
   Future<Object> getDataBySelectedTime(
       {List<String> categories, List<DateTime> dateRange, List<DateTime> dateList}) async {
-    print(dateList.length);
     if (dateRange.isEmpty && dateList.length > 1) {
-      //Used to return a list of the data for all "individualDates"
-      print('returning list of maps');
-      List<Map> dataList = [];
+      return await _getIndividualDates(dateList);
+    } else if (dateRange.isEmpty && dateList.length == 1) {
+      return await _getSingleDate(dateList);
+    } else if (dateRange.isNotEmpty && dateList.isEmpty) {
+      return await _getTransfersByPeriod(dateRange, categories);
+    }
+  }
+
+  Future<List<Map>> _getIndividualDates(List<DateTime> dateList) async {
+    List<Map> dataList = [];
+    try {
       for (DateTime date in dateList) {
         var snapshot = await _totalsCollection
             .document(uid)
@@ -117,10 +125,14 @@ class DatabaseService {
         dataList.add(snapShotmap);
       }
       return dataList;
-    } else if (dateRange.isEmpty && dateList.length == 1) {
-      print('returning single date data');
-      //used to return a map for a "singleDate"
-      DateTime singleDate = dateList[0];
+    } catch (e) {
+      _handleError(e);
+    }
+  }
+
+  Future<Map> _getSingleDate(List<DateTime> dateList) async {
+    DateTime singleDate = dateList[0];
+    try {
       var snapshot = await _totalsCollection
           .document(uid)
           .collection('${singleDate.year}')
@@ -128,33 +140,37 @@ class DatabaseService {
           .get();
       Map snapShotmap = snapshot.data;
       return snapShotmap;
-    } else if (dateRange.isNotEmpty && dateList.isEmpty) {
-      //TODO: Refactor this code to load individual transfers (subscribers only)
-      try {
-        QuerySnapshot snapshot = await _transferCollection
-            .where('userID', isEqualTo: uid)
-            .where('date', isGreaterThanOrEqualTo: dateRange[0])
-            .where('date', isLessThanOrEqualTo: dateRange[1])
-            .where('category', whereIn: categories)
-            .orderBy('date')
-            .getDocuments();
-        List<Transfer> transferList = [];
-        snapshot.documents.forEach((transferData) {
-          transferList.add(Transfer(
-              isExpense: transferData.data['isExpense'],
-              name: transferData.data['name'],
-              amount: transferData.data['amount'],
-              isRecurring: transferData.data['isRecurring'],
-              category: transferData.data['category'],
-              date: transferData.data['date']));
-        });
-        print('first transfer : ${transferList[0].date}');
-        print('last transfer : ${transferList.last.date}');
-        print(transferList.length);
-        return transferList;
-      } catch (e) {
-        print(e);
-      }
+    } catch (e) {
+      _handleError(e);
+    }
+  }
+
+  Future<List<Transfer>> _getTransfersByPeriod(
+      List<DateTime> dateRange, List<String> categories) async {
+    try {
+      QuerySnapshot snapshot = await _transferCollection
+          .where('userID', isEqualTo: uid)
+          .where('date', isGreaterThanOrEqualTo: dateRange[0])
+          .where('date', isLessThanOrEqualTo: dateRange[1])
+          .where('category', whereIn: categories)
+          .orderBy('date')
+          .getDocuments();
+      List<Transfer> transferList = [];
+      snapshot.documents.forEach((transferData) {
+        transferList.add(Transfer(
+            isExpense: transferData.data['isExpense'],
+            name: transferData.data['name'],
+            amount: transferData.data['amount'],
+            isRecurring: transferData.data['isRecurring'],
+            category: transferData.data['category'],
+            date: transferData.data['date']));
+      });
+      print('first transfer : ${transferList[0].date}');
+      print('last transfer : ${transferList.last.date}');
+      print(transferList.length);
+      return transferList;
+    } catch (e) {
+      _handleError(e);
     }
   }
 
@@ -179,5 +195,9 @@ class DatabaseService {
         .orderBy('date', descending: true)
         .snapshots()
         .map(_transferListFromSnapshot);
+  }
+
+  void _handleError(dynamic error) {
+    print(error);
   }
 }

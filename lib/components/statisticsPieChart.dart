@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_haushaltsbuch/components/pieChartIndicator.dart';
+import 'package:flutter_haushaltsbuch/components/chartIndicator.dart';
 
 class StatisticsPieChart extends StatefulWidget {
   StatisticsPieChart({this.data, this.touchedIndex});

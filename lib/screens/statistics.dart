@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_haushaltsbuch/components/customFilterChip.dart';
 import 'package:flutter_haushaltsbuch/components/flchart.dart';
 import 'package:flutter_haushaltsbuch/components/monthPicker.dart';
-import 'package:flutter_haushaltsbuch/components/pieChartIndicator.dart';
+import 'package:flutter_haushaltsbuch/components/chartIndicator.dart';
 import 'package:flutter_haushaltsbuch/models/transfer.dart';
 import 'package:flutter_haushaltsbuch/services/database.dart';
 import 'package:flutter_haushaltsbuch/utility/constants.dart';
@@ -173,18 +173,15 @@ class _StatisticsState extends State<Statistics> {
           return Text('haserror');
         } else {
           return AnimatedSwitcher(
-            duration: Duration(milliseconds: 300),
-            child: _selectedDates != null
-                ? _selectedDates.length == 1
-                    ? StatisticsPieChart(
-                        data: snapshot.data,
-                        touchedIndex: touchedIndex,
-                      )
-                    : StatisticsPieceBarChart(
-                        data: snapshot.data,
-                      )
-                : Container(),
-          );
+              duration: Duration(milliseconds: 3000),
+              child: _selectedDates.length == 1
+                  ? StatisticsPieChart(
+                      data: snapshot.data,
+                      touchedIndex: touchedIndex,
+                    )
+                  : StatisticsPieceBarChart(
+                      data: snapshot.data,
+                    ));
         }
     }
   }
@@ -206,49 +203,6 @@ class _StatisticsState extends State<Statistics> {
 //              },
 //            ))
 //        .toList();
-//  }
-
-//  List<Widget> _buildIndicatorRow(AsyncSnapshot snapshot) {
-//    if (!snapshot.hasError) {
-//      var snapshotData = snapshot.data;
-//      if (snapshotData.runtimeType == Map<String, dynamic>().runtimeType) {
-//        //if the datatype of the asyncsnapshot is a single Map
-//        Map<String, dynamic> dataMap = snapshotData;
-//        List<MapEntry> entryList = dataMap.entries.toList();
-//        return entryList.map((e) {
-//          int index = entryList.indexOf(e);
-//          return Indicator(
-//            color: widget.colorList[index],
-//            text: e.key,
-//            onTap: () {
-//              setState(() {
-//                touchedIndex == index ? touchedIndex = -1 : touchedIndex = index;
-//              });
-//            },
-//            isSquare: false,
-//            size: touchedIndex == index ? 18 : 16,
-//            textColor: touchedIndex == index ? Colors.black : Colors.grey,
-//          );
-//        }).toList();
-//      } else if (snapshotData.runtimeType == List<Map<dynamic, dynamic>>().runtimeType) {
-//        //if the datatype of the asyncsnapshot is a List of maps
-//
-//      }
-//      //snapshot is either a single map or a list of maps
-////      return Indicator(
-////        color: widget.colorList[index],
-////        text: e.key,
-////        onTap: () {
-////          setState(() {
-////            touchedIndex == index ? touchedIndex = -1 : touchedIndex = index;
-////          });
-////        },
-////        isSquare: false,
-////        size: touchedIndex == index ? 18 : 16,
-////        textColor: touchedIndex == index ? Colors.black : Colors.grey,
-////      );
-//      return [];
-//    }
 //  }
 
 //TODO: Refactor this code for a detailed Range picker

@@ -16,4 +16,4 @@ const kTabbarTextStyle = TextStyle(
   fontWeight: FontWeight.w600,
   color: kTextColorHeading,
 );
-const kCategoryColorList = [Color(0xff0293ee), Color(0xfff8b250), Color(0xff845bef)];
+const kCategoryColorList = [Color(0xff0293ee), Color(0xfff8b250), Color(0xff845bef), Colors.green];
