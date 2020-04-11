@@ -25,6 +25,8 @@ class StatisticsPieceBarChartState extends State<StatisticsPieceBarChart> {
   List<String> _categoryList = [];
   double _min = 0;
   double _max = 0;
+  int _lineInterval = 100;
+  double _maxY = 500;
 
   @override
   void initState() {
@@ -53,7 +55,7 @@ class StatisticsPieceBarChartState extends State<StatisticsPieceBarChart> {
                 child: BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.center,
-                    maxY: 10,
+                    maxY: _maxY,
                     groupsSpace: 12,
                     barTouchData: BarTouchData(
                       enabled: true,
@@ -68,7 +70,7 @@ class StatisticsPieceBarChartState extends State<StatisticsPieceBarChart> {
                         getTitles: (double value) {
                           switch (value.toInt()) {
                             case 0:
-                              return 'Mon';
+                              return 'Test \n test';
                             case 1:
                               return 'Tue';
                             case 2:
@@ -96,7 +98,7 @@ class StatisticsPieceBarChartState extends State<StatisticsPieceBarChart> {
                           }
                           return '${value.toInt()}';
                         },
-                        interval: 5,
+                        interval: _lineInterval.toDouble(),
                         margin: 8,
                         reservedSize: 30,
                       ),
@@ -110,14 +112,14 @@ class StatisticsPieceBarChartState extends State<StatisticsPieceBarChart> {
                           }
                           return '${value.toInt()}0k';
                         },
-                        interval: 5,
+                        interval: 1,
                         margin: 8,
                         reservedSize: 0,
                       ),
                     ),
                     gridData: FlGridData(
                       show: true,
-                      checkToShowHorizontalLine: (value) => value % 5 == 0,
+                      checkToShowHorizontalLine: (value) => value % _lineInterval == 0,
                       getDrawingHorizontalLine: (value) {
                         if (value == 0) {
                           return FlLine(color: Color(0xff363753), strokeWidth: 3);
@@ -131,7 +133,7 @@ class StatisticsPieceBarChartState extends State<StatisticsPieceBarChart> {
                     borderData: FlBorderData(
                       show: true,
                     ),
-                    barGroups: _buildChartGroupData(),
+                    barGroups: _buildGroupDataList(),
                   ),
                 ),
               ),
@@ -175,64 +177,76 @@ class StatisticsPieceBarChartState extends State<StatisticsPieceBarChart> {
     }).toList();
   }
 
-  List<BarChartGroupData> _buildChartGroupData() {
+  List<BarChartGroupData> _buildGroupDataList() {
     return widget.data.map((e) {
       int index = widget.data.indexOf(e);
-      double maxAmount = _getMaxAmount(e);
+      double maxAmount = _getTotalAmount(e);
       return BarChartGroupData(
         x: index,
         barRods: [
           BarChartRodData(
-            y: maxAmount,
+            y: _selectedCategories.isNotEmpty ? _getSelectedCategorySum(e) : maxAmount,
             width: barWidth,
             borderRadius:
                 BorderRadius.only(topLeft: Radius.circular(6), topRight: Radius.circular(6)),
-            rodStackItem: _buildRodStackItems(e, maxAmount),
+            rodStackItem: _buildRodStackItems(e),
           ),
         ],
       );
     }).toList();
   }
 
-  double _getMaxAmount(Map categories) {
-    double summary = 0;
+  double _getTotalAmount(Map categories) {
+    double total = 0;
     categories.forEach((key, value) {
-      summary += value;
+      total += value;
     });
-    return summary / 100;
+    return total;
   }
 
-  List<BarChartRodStackItem> _buildRodStackItems(Map totals, double maxAmount) {
+  List<BarChartRodStackItem> _buildRodStackItems(Map categoryTotals) {
     int indexModifier = 0;
-
-    List<MapEntry> _sortedEntries = totals.entries.toList()
+    List<MapEntry> _sortedEntries = categoryTotals.entries.toList()
       ..sort((entry1, entry2) {
         return entry1.key.toString().toLowerCase().compareTo(entry2.key.toString().toLowerCase());
       });
 
+    if (_selectedCategories.isNotEmpty) {
+      _sortedEntries.removeWhere((entry) {
+        return !_selectedCategories.contains(entry.key);
+      });
+    }
+
     return _sortedEntries.map((entry) {
       int index = _sortedEntries.indexOf(entry);
-      List minMaxList = _getChartPieceRanges(index, maxAmount, entry);
-      if (entry.key == _categoryList[index]) {
-        return BarChartRodStackItem(minMaxList[0], minMaxList[1], kCategoryColorList[index]);
-      } else {
-        while (entry.key != _categoryList[index + indexModifier]) {
-          indexModifier++;
-        }
-        return BarChartRodStackItem(
-            minMaxList[0], minMaxList[1], kCategoryColorList[index + indexModifier]);
+      List chartSections = _getBarChartSectionValues(index, entry);
+      while (entry.key != _categoryList[index + indexModifier]) {
+        indexModifier++;
       }
+      return BarChartRodStackItem(
+          chartSections[0], chartSections[1], kCategoryColorList[index + indexModifier]);
     }).toList();
   }
 
-  List<double> _getChartPieceRanges(int index, double maxAmount, MapEntry entry) {
+  List<double> _getBarChartSectionValues(int index, MapEntry entry) {
+    double _value = double.parse(entry.value.toString());
     if (index == 0) {
-      _max = entry.value / 100;
+      _max = _value;
       return [0, _max];
     } else {
       _min = _max;
-      _max = _min + entry.value / 100;
+      _max = _min + _value;
       return [_min, _max];
     }
+  }
+
+  double _getSelectedCategorySum(Map totalsMap) {
+    double _sum = 0;
+    for (var category in _selectedCategories) {
+      if (totalsMap.containsKey(category)) {
+        _sum += totalsMap[category];
+      }
+    }
+    return _sum;
   }
 }
